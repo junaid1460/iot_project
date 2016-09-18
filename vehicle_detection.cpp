@@ -26,7 +26,7 @@ void drawAndShowContours(cv::Size imageSize, std::vector<std::vector<cv::Point> 
 void drawAndShowContours(cv::Size imageSize, std::vector<Blob> blobs, std::string strImageName);
 bool checkIfBlobsCrossedTheLine(std::vector<Blob> &blobs, int &intHorizontalLinePosition, int &carCount);
 void drawBlobInfoOnImage(std::vector<Blob> &blobs, cv::Mat &imgFrame2Copy);
-void drawCarCountOnImage(int &carCount, cv::Mat &imgFrame2Copy);
+void drawCarCountOnImage(int &carCount,int &carOutCount, cv::Mat &imgFrame2Copy);
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 int main(void) {
@@ -41,9 +41,9 @@ int main(void) {
     cv::Point crossingLine[2];
     cv::Point cl2[2];
 
-    int carCount = 0;
+    int carCount = 0,carOutCount=0;
 //change to your own video
-    capVideo.open("abcd.mp4");
+    capVideo.open("../abcd.mp4");
 
     if (!capVideo.isOpened()) {                                                 // if unable to open video file
         std::cout << "error reading video file" << std::endl << std::endl;      // show error message
@@ -101,7 +101,7 @@ int x = 10;
 
         cv::absdiff(imgFrame1Copy, imgFrame2Copy, imgDifference);
 
-        cv::threshold(imgDifference, imgThresh, 35, 255.0, CV_THRESH_BINARY);
+        cv::threshold(imgDifference, imgThresh, 27, 255.0, CV_THRESH_BINARY);
 
         cv::imshow("imgThresh", imgThresh);
 
@@ -147,8 +147,6 @@ int x = 10;
         }
 
         drawAndShowContours(imgThresh.size(), currentFrameBlobs, "imgCurrentFrameBlobs");
-        bool BlobOnTopLine = checkIfBlobsCrossedTheLine(currentFrameBlobs, intHorizontalLinePosition, carCount);
-        bool BlobOnBottomLine = checkIfBlobsCrossedTheLine(currentFrameBlobs, intHorizontalLinePosition1, carCount);
 
         if (blnFirstFrame == true) {
             for (auto &currentFrameBlob : currentFrameBlobs) {
@@ -165,8 +163,8 @@ int x = 10;
         drawBlobInfoOnImage(blobs, imgFrame2Copy);
 
 //CHECKING WHETHER BLOB CROSSED THE LINE
-         BlobOnTopLine = checkIfBlobsCrossedTheLine(blobs, intHorizontalLinePosition, carCount);
-         BlobOnBottomLine = checkIfBlobsCrossedTheLine(blobs, intHorizontalLinePosition1, carCount);
+        bool BlobOnTopLine = checkIfBlobsCrossedTheLine(blobs, intHorizontalLinePosition, carCount);
+        bool BlobOnBottomLine = checkIfBlobsCrossedTheLine(blobs, intHorizontalLinePosition1, carOutCount);
 
 
         if (BlobOnTopLine == true) {
@@ -182,7 +180,7 @@ int x = 10;
             cv::line(imgFrame2Copy, cl2[0], cl2[1], SCALAR_RED, 2);
         }
 
-        drawCarCountOnImage(carCount, imgFrame2Copy);
+        drawCarCountOnImage(carCount,carOutCount, imgFrame2Copy);
 
         cv::imshow("imgFrame2Copy", imgFrame2Copy);
 
@@ -335,9 +333,7 @@ bool checkIfBlobsCrossedTheLine(std::vector<Blob> &blobs, int &intHorizontalLine
             int currFrameIndex = (int)blob.centerPositions.size() - 1;
 
             if (blob.centerPositions[prevFrameIndex].y > intHorizontalLinePosition && blob.centerPositions[currFrameIndex].y <= intHorizontalLinePosition) {
-                if(blob.crossedFirstLine==false)
-                   blob.crossedFirstLine==true;
-                else
+
                    carCount++;
                 blnAtLeastOneBlobCrossedTheLine = true;
             }
@@ -367,7 +363,7 @@ void drawBlobInfoOnImage(std::vector<Blob> &blobs, cv::Mat &imgFrame2Copy) {
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-void drawCarCountOnImage(int &carCount, cv::Mat &imgFrame2Copy) {
+void drawCarCountOnImage(int &carCount,int &carOutCount, cv::Mat &imgFrame2Copy) {
 
     int intFontFace = CV_FONT_HERSHEY_SIMPLEX;
     double dblFontScale = (imgFrame2Copy.rows * imgFrame2Copy.cols) / 300000.0;
@@ -377,9 +373,9 @@ void drawCarCountOnImage(int &carCount, cv::Mat &imgFrame2Copy) {
 
     cv::Point ptTextBottomLeftPosition;
 
-    ptTextBottomLeftPosition.x = imgFrame2Copy.cols - 1 - (int)((double)textSize.width * 1.25);
+    ptTextBottomLeftPosition.x = imgFrame2Copy.cols - 1 - (int)((double)textSize.width * 3);
     ptTextBottomLeftPosition.y = (int)((double)textSize.height * 1.25);
 
-    cv::putText(imgFrame2Copy, std::to_string(carCount), ptTextBottomLeftPosition, intFontFace, dblFontScale, SCALAR_GREEN, intFontThickness);
+    cv::putText(imgFrame2Copy, std::to_string(carCount)+"|"+std::to_string(carOutCount), ptTextBottomLeftPosition, intFontFace, dblFontScale, SCALAR_GREEN, intFontThickness);
 
 }
