@@ -1,0 +1,8 @@
+cmake_minimum_required(VERSION 2.8)
+project( vehicle_detection )
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+find_package( OpenCV REQUIRED )
+include_directories( ${OpenCV_INCLUDE_DIRS} )
+add_executable( out vehicle_detection.cpp Blob.cpp)
+target_link_libraries( out ${OpenCV_LIBS} )
+
