@@ -5,7 +5,6 @@
 #include<opencv2/imgproc/imgproc.hpp>
 #include <unistd.h>
 #include<iostream>
-    // it may be necessary to change or remove this line if not using Windows
 
 #include "Blob.h"
 
@@ -43,7 +42,7 @@ int main(void) {
     cv::Point cl2[2];
 
     int carCount = 0;
-
+//change to your own video
     capVideo.open("abcd.mp4");
 
     if (!capVideo.isOpened()) {                                                 // if unable to open video file
@@ -103,8 +102,7 @@ int x = 10;
         cv::absdiff(imgFrame1Copy, imgFrame2Copy, imgDifference);
 
         cv::threshold(imgDifference, imgThresh, 35, 255.0, CV_THRESH_BINARY);
-        while(x--)continue;
-        x=10;
+
         cv::imshow("imgThresh", imgThresh);
 
         cv::Mat structuringElement3x3 = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(3, 3));
