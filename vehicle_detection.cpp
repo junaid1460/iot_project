@@ -43,7 +43,7 @@ int main(void) {
 
     int carCount = 0,carOutCount=0;
 //change to your own video
-    capVideo.open("../abcd.mp4");
+    capVideo.open("xyz.mp4");
 
     if (!capVideo.isOpened()) {                                                 // if unable to open video file
         std::cout << "error reading video file" << std::endl << std::endl;      // show error message
