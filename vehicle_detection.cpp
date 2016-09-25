@@ -41,9 +41,10 @@ int main(void) {
     cv::Point crossingLine[2];
     cv::Point cl2[2];
 
+
     int carCount = 0,carOutCount=0;
 //change to your own video
-    capVideo.open("xyz.mp4");
+    capVideo.open("../abcd.mp4");
 
     if (!capVideo.isOpened()) {                                                 // if unable to open video file
         std::cout << "error reading video file" << std::endl << std::endl;      // show error message
@@ -58,7 +59,6 @@ int main(void) {
     }
 
     capVideo.read(imgFrame1);
-    capVideo.read(imgFrame2);
 
     int intHorizontalLinePosition = (int)std::round((double)imgFrame1.rows * 0.25);
     int intHorizontalLinePosition1 = (int)std::round((double)imgFrame1.rows * 0.75);
@@ -81,7 +81,13 @@ int main(void) {
     bool blnFirstFrame = true;
 
     int frameCount = 2;
-int x = 10;
+int x = 0;
+
+cv::Point2f p1;
+p1.x = 0; p1.y = 0;
+cv::Point2f p2;
+cv::Size imageSize(1000,480); // your window size
+cv::Mat image(imageSize, CV_8UC1);
     while (capVideo.isOpened() && chCheckForEscKey != 27) {
 
 
@@ -156,6 +162,15 @@ int x = 10;
             matchCurrentFrameBlobsToExistingBlobs(blobs, currentFrameBlobs);
         }
 
+
+        x++;
+        p2.x = x;
+        p2.y = 480/2-currentFrameBlobs.size()*10;
+        cv::line(image, p1, p2, 'r', 1, CV_AA, 0);
+        cv::imshow("graph", image);
+        p1=p2;
+
+
         drawAndShowContours(imgThresh.size(), blobs, "imgBlobs");
 
         imgFrame2Copy = imgFrame2.clone();          // get another copy of frame 2 since we changed the previous frame 2 copy in the processing above
@@ -189,8 +204,7 @@ int x = 10;
                 // now we prepare for the next iteration
 
         currentFrameBlobs.clear();
-
-        imgFrame1 = imgFrame2.clone();           // move frame 1 up to where frame 2 is
+          // move frame 1 up to where frame 2 is
 
         if ((capVideo.get(CV_CAP_PROP_POS_FRAMES) + 1) < capVideo.get(CV_CAP_PROP_FRAME_COUNT)) {
             capVideo.read(imgFrame2);
