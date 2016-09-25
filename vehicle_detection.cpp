@@ -9,7 +9,7 @@
 #include "Blob.h"
 
 #define SHOW_STEPS            // un-comment or comment this line to show steps or not
-
+int tBlobH,tBlobW;
 // global variables ///////////////////////////////////////////////////////////////////////////////
 const cv::Scalar SCALAR_BLACK = cv::Scalar(0.0, 0.0, 0.0);
 const cv::Scalar SCALAR_WHITE = cv::Scalar(255.0, 255.0, 255.0);
@@ -59,6 +59,7 @@ int main(void) {
     }
 
     capVideo.read(imgFrame1);
+    capVideo.read(imgFrame2);
 
     int intHorizontalLinePosition = (int)std::round((double)imgFrame1.rows * 0.25);
     int intHorizontalLinePosition1 = (int)std::round((double)imgFrame1.rows * 0.75);
@@ -86,10 +87,14 @@ int x = 0;
 cv::Point2f p1;
 p1.x = 0; p1.y = 0;
 cv::Point2f p2;
+cv::Point2f p3;
+p3.x = 0; p3.y = 0;
+cv::Point2f p4;
 cv::Size imageSize(1000,480); // your window size
 cv::Mat image(imageSize, CV_8UC1);
     while (capVideo.isOpened() && chCheckForEscKey != 27) {
-
+tBlobH=0;
+tBlobW=0;
 
         std::vector<Blob> currentFrameBlobs;
 
@@ -102,12 +107,12 @@ cv::Mat image(imageSize, CV_8UC1);
         cv::cvtColor(imgFrame1Copy, imgFrame1Copy, CV_BGR2GRAY);
         cv::cvtColor(imgFrame2Copy, imgFrame2Copy, CV_BGR2GRAY);
 
-        cv::GaussianBlur(imgFrame1Copy, imgFrame1Copy, cv::Size(5, 5), 0);
-        cv::GaussianBlur(imgFrame2Copy, imgFrame2Copy, cv::Size(5, 5), 0);
+        cv::GaussianBlur(imgFrame1Copy, imgFrame1Copy, cv::Size(5, 3), 0);
+        cv::GaussianBlur(imgFrame2Copy, imgFrame2Copy, cv::Size(5, 3), 0);
 
         cv::absdiff(imgFrame1Copy, imgFrame2Copy, imgDifference);
 
-        cv::threshold(imgDifference, imgThresh, 27, 255.0, CV_THRESH_BINARY);
+        cv::threshold(imgDifference, imgThresh, 30, 255.0, CV_THRESH_BINARY);
 
         cv::imshow("imgThresh", imgThresh);
 
@@ -118,7 +123,8 @@ cv::Mat image(imageSize, CV_8UC1);
 
         for (unsigned int i = 0; i < 2; i++) {
             cv::dilate(imgThresh, imgThresh, structuringElement5x5);
-            cv::dilate(imgThresh, imgThresh, structuringElement5x5);
+
+                cv::dilate(imgThresh, imgThresh, structuringElement5x5);
             cv::erode(imgThresh, imgThresh, structuringElement5x5);
         }
 
@@ -163,20 +169,37 @@ cv::Mat image(imageSize, CV_8UC1);
         }
 
 
-        x++;
-        p2.x = x;
-        p2.y = 480/2-currentFrameBlobs.size()*10;
-        cv::line(image, p1, p2, 'r', 1, CV_AA, 0);
-        cv::imshow("graph", image);
-        p1=p2;
+
 
 
         drawAndShowContours(imgThresh.size(), blobs, "imgBlobs");
 
-        imgFrame2Copy = imgFrame2.clone();          // get another copy of frame 2 since we changed the previous frame 2 copy in the processing above
+        imgFrame2Copy = imgFrame2.clone();
+             // get another copy of frame 2 since we changed the previous frame 2 copy in the processing above
 
         drawBlobInfoOnImage(blobs, imgFrame2Copy);
 
+        x++;
+        p2.x = x;
+        p2.y = 300-currentFrameBlobs.size()*10;
+        cv::line(image, p1, p2, 'r', 1, CV_AA, 0);//counts
+
+        int rows,cols;
+        rows = imgFrame2.rows;
+        cols = imgFrame2.cols;
+        tBlobH /=3;
+
+        tBlobW /=3;
+        int densityPoint = (tBlobH+tBlobW)/2;
+        densityPoint = densityPoint*480/2/((rows+cols)/2);
+        p4.y = 480-densityPoint;
+        p4.x = x;
+        std::cout << "("<<densityPoint/10<<"|"<<tBlobH<<"|"<<tBlobW<<")";
+        cv::line(image, p3, p4,CV_RGB(255,255,23), 2,CV_AA,0);//counts
+
+        cv::imshow("graph", image);
+        p1=p2;
+        p3=p4;
 //CHECKING WHETHER BLOB CROSSED THE LINE
         bool BlobOnTopLine = checkIfBlobsCrossedTheLine(blobs, intHorizontalLinePosition, carCount);
         bool BlobOnBottomLine = checkIfBlobsCrossedTheLine(blobs, intHorizontalLinePosition1, carOutCount);
@@ -204,6 +227,7 @@ cv::Mat image(imageSize, CV_8UC1);
                 // now we prepare for the next iteration
 
         currentFrameBlobs.clear();
+        imgFrame1 = imgFrame2.clone();
           // move frame 1 up to where frame 2 is
 
         if ((capVideo.get(CV_CAP_PROP_POS_FRAMES) + 1) < capVideo.get(CV_CAP_PROP_FRAME_COUNT)) {
@@ -366,7 +390,8 @@ void drawBlobInfoOnImage(std::vector<Blob> &blobs, cv::Mat &imgFrame2Copy) {
 
         if (blobs[i].blnStillBeingTracked == true) {
             cv::rectangle(imgFrame2Copy, blobs[i].currentBoundingRect, SCALAR_RED, 2);
-
+            tBlobW+=blobs[i].currentBoundingRect.x;
+            tBlobH+=blobs[i].currentBoundingRect.y;
             int intFontFace = CV_FONT_HERSHEY_SIMPLEX;
             double dblFontScale = blobs[i].dblCurrentDiagonalSize / 60.0;
             int intFontThickness = (int)std::round(dblFontScale * 1.0);
