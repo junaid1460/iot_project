@@ -27,7 +27,11 @@ opencv2/imgproc/imgproc.hpp
 -
 unistd.h
 -
+fcntl.h
+-
 iostream
+-
+fstream
 -
 Blob.h
 /home/crook/iot/detector/Blob.h

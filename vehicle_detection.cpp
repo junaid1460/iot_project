@@ -4,11 +4,14 @@
 #include<opencv2/highgui/highgui.hpp>
 #include<opencv2/imgproc/imgproc.hpp>
 #include <unistd.h>
+#include <fcntl.h>
 #include<iostream>
-
+#include<fstream>
 #include "Blob.h"
 
-#define SHOW_STEPS            // un-comment or comment this line to show steps or not
+#define SHOW_STEPS
+
+using namespace std;        // un-comment or comment this line to show steps or not
 int tBlobH,tBlobW;
 // global variables ///////////////////////////////////////////////////////////////////////////////
 const cv::Scalar SCALAR_BLACK = cv::Scalar(0.0, 0.0, 0.0);
@@ -29,9 +32,10 @@ void drawBlobInfoOnImage(std::vector<Blob> &blobs, cv::Mat &imgFrame2Copy);
 void drawCarCountOnImage(int &carCount,int &carOutCount, cv::Mat &imgFrame2Copy);
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-int main(void) {
+int main(int argc,char* argv[]) {
 
-    cv::VideoCapture capVideo;
+  //  cv::VideoCapture capVideo;
+
 
     cv::Mat imgFrame1;
     cv::Mat imgFrame2;
@@ -44,6 +48,7 @@ int main(void) {
 
     int carCount = 0,carOutCount=0;
 //change to your own video
+/*
     capVideo.open("xyz.mp4");
 
     if (!capVideo.isOpened()) {                                                 // if unable to open video file
@@ -57,9 +62,13 @@ int main(void) {
        // _getch();                   // it may be necessary to change or remove this line if not using Windows
         return(0);
     }
+*/
+  //  capVideo.read(imgFrame1);
+  //  capVideo.read(imgFrame2);
 
-    capVideo.read(imgFrame1);
-    capVideo.read(imgFrame2);
+
+    imgFrame1 = cv::imread(argv[1],cv::IMREAD_COLOR);
+    imgFrame2 = cv::imread(argv[2],cv::IMREAD_COLOR);
 
     int intHorizontalLinePosition = (int)std::round((double)imgFrame1.rows * 0.25);
     int intHorizontalLinePosition1 = (int)std::round((double)imgFrame1.rows * 0.75);
@@ -82,19 +91,21 @@ int main(void) {
     bool blnFirstFrame = true;
 
     int frameCount = 2;
-int x = 0;
+    int x = 0;
+    ////point initialization
+    cv::Point2f p1;
+    p1.x = 0; p1.y = 0;
+    cv::Point2f p2;
+    cv::Point2f p3;
+    p3.x = 0; p3.y = 0;
+    cv::Point2f p4;
+    cv::Size imageSize(1000,480); // your window size
+    cv::Mat image(imageSize, CV_8UC1);
 
-cv::Point2f p1;
-p1.x = 0; p1.y = 0;
-cv::Point2f p2;
-cv::Point2f p3;
-p3.x = 0; p3.y = 0;
-cv::Point2f p4;
-cv::Size imageSize(1000,480); // your window size
-cv::Mat image(imageSize, CV_8UC1);
-    while (capVideo.isOpened() && chCheckForEscKey != 27) {
-tBlobH=0;
-tBlobW=0;
+    if(1) {
+        tBlobH=0;
+        tBlobW=0;
+
 
         std::vector<Blob> currentFrameBlobs;
 
@@ -114,7 +125,7 @@ tBlobW=0;
 
         cv::threshold(imgDifference, imgThresh, 30, 255.0, CV_THRESH_BINARY);
 
-        cv::imshow("imgThresh", imgThresh);
+      //  cv::imshow("imgThresh", imgThresh);
 
         cv::Mat structuringElement3x3 = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(3, 3));
         cv::Mat structuringElement5x5 = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(5, 5));
@@ -160,8 +171,11 @@ tBlobW=0;
 
         drawAndShowContours(imgThresh.size(), currentFrameBlobs, "imgCurrentFrameBlobs");
 
+
         if (blnFirstFrame == true) {
+
             for (auto &currentFrameBlob : currentFrameBlobs) {
+              //  if(currentFrameBlob.currentBoundingRect.x > 50 && currentFrameBlob.currentBoundingRect.y > 50)
                 blobs.push_back(currentFrameBlob);
             }
         } else {
@@ -170,9 +184,6 @@ tBlobW=0;
 
 
 
-
-
-        drawAndShowContours(imgThresh.size(), blobs, "imgBlobs");
 
         imgFrame2Copy = imgFrame2.clone();
              // get another copy of frame 2 since we changed the previous frame 2 copy in the processing above
@@ -194,10 +205,10 @@ tBlobW=0;
         densityPoint = densityPoint*480/2/((rows+cols)/2);
         p4.y = 480-densityPoint;
         p4.x = x;
-        std::cout << "("<<densityPoint/10<<"|"<<tBlobH<<"|"<<tBlobW<<")";
+        //std::cout << "("<<densityPoint/10<<"|"<<tBlobH<<"|"<<tBlobW<<")";
         cv::line(image, p3, p4,CV_RGB(255,255,23), 2,CV_AA,0);//counts
 
-        cv::imshow("graph", image);
+        //cv::imshow("graph", image);
         p1=p2;
         p3=p4;
 //CHECKING WHETHER BLOB CROSSED THE LINE
@@ -220,12 +231,19 @@ tBlobW=0;
 
         drawCarCountOnImage(carCount,carOutCount, imgFrame2Copy);
 
-        cv::imshow("imgFrame2Copy", imgFrame2Copy);
+      //  cv::imshow("imgFrame2Copy", imgFrame2Copy);
+        std::ofstream fs;
+        fs.open ("log.db", std::fstream::in | std::fstream::out | std::fstream::app);
 
-        cv::waitKey(100);                 // uncomment this line to go frame by frame for debugging
+        fs <<" "<< blobs.size();
+
+        fs.close();
+
+        drawAndShowContours(imgThresh.size(), blobs, "imgBlobs");
+    //    cv::waitKey(100);                 // uncomment this line to go frame by frame for debugging
 
                 // now we prepare for the next iteration
-
+/*
         currentFrameBlobs.clear();
         imgFrame1 = imgFrame2.clone();
           // move frame 1 up to where frame 2 is
@@ -237,7 +255,7 @@ tBlobW=0;
             std::cout << "end of video\n";
             break;
         }
-
+*/
         blnFirstFrame = false;
         frameCount++;
         chCheckForEscKey = cv::waitKey(1);
@@ -246,9 +264,10 @@ tBlobW=0;
     if (chCheckForEscKey != 27) {               // if the user did not press esc (i.e. we reached the end of the video)
         cv::waitKey(0);                         // hold the windows open to allow the "end of video" message to show
     }
+    cout<<blobs.size();
     // note that if the user did press esc, we don't need to hold the windows open, we can simply let the program end which will close the windows
 
-    return(0);
+    return 0;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -339,7 +358,7 @@ void drawAndShowContours(cv::Size imageSize, std::vector<std::vector<cv::Point> 
 
     cv::drawContours(image, contours, -1, SCALAR_WHITE, -1);
 
-    cv::imshow(strImageName, image);
+  //  cv::imshow(strImageName, image);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -357,7 +376,7 @@ void drawAndShowContours(cv::Size imageSize, std::vector<Blob> blobs, std::strin
 
     cv::drawContours(image, contours, -1, SCALAR_WHITE, -1);
 
-    cv::imshow(strImageName, image);
+  //  cv::imshow(strImageName, image);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
